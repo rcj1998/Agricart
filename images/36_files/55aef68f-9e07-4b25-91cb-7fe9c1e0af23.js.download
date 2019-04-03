@@ -1,0 +1,358 @@
+(function() {
+
+
+    var debug = false;
+    var url = window.location.pathname;
+    var domain = window.location.hostname;
+    var pixelId;
+    var productCatalogId;
+    
+      pixelId = '136477660368732'
+    
+    
+      productCatalogId = '1935247986781361'
+    
+    var products = [];
+    var cartTracked = false;
+    var order = undefined;
+    var purchaseInfo = {};
+    var viewContentInfo = {};
+    var addToCartInfo = {};
+    var _jquery;
+
+
+    var loadScript = function(url, callback) {
+        var newScript = document.createElement("script");
+        var head = document.getElementsByTagName("head")[0]
+        newScript.type = "text/javascript";
+        if (newScript.readyState) {
+            // Internet Explorer
+            newScript.onreadystatechange = function() {
+                if (script.readyState == "loaded" || script.readyState == "complete") {
+                    script.onreadystatechange = null;
+                    callback();
+                }
+            };
+        } else {
+            // other browsers
+            newScript.onload = function() {
+                callback();
+            };
+        }
+        newScript.src = url;
+        head.appendChild(newScript);
+    };
+
+
+    var printDebugInfo = function(message) {
+        if (debug) {
+            console.log('[ADMONKS]: ' + message)
+        }
+    }
+
+
+    var isOldVersionjQuery = function() {
+      var arr = jQuery.fn.jquery.split('.')
+
+      if(arr[0] > 1 || (arr[0] == 1 && arr[1] > 7)) {
+        return false;
+      }
+      return true;
+    }
+
+
+    var initTracking = function() {
+
+        if (!window.jQuery || typeof jQuery === 'undefined' || isOldVersionjQuery()) {
+            printDebugInfo('Loading jQuery 1.9.1 from googleapis because jQuery is not available now or it is too old');
+            loadScript('//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js', function () {
+                var jqueryCon = jQuery.noConflict(true);
+                startTracking(jqueryCon);
+            });
+        } else {
+            printDebugInfo('jQuery is present');
+            startTracking(jQuery);
+        }
+    };
+
+
+    var startTracking = function(_jqueryCon) {
+        _jquery = _jqueryCon
+        printDebugInfo('Start sprawdzany czy pixel jest juz zaladowany');
+        if (!window.fbq) {
+            initCommands(true);
+        } else {
+            printDebugInfo('Sprawdzamy istniejace pixele');
+            _right_pixel = false
+            printDebugInfo('fbq.getState().pixels[i].id');
+            for (var i=0; i < fbq.getState().pixels.length; ++i) {
+                printDebugInfo('Pixel zaladowany: ' + fbq.getState().pixels[i].id);
+                console.log(fbq.getState().pixels[i].id);
+                _right_pixel = pixelId == fbq.getState().pixels[i].id;
+                if (_right_pixel) break;
+            }
+            if (!_right_pixel) {
+                initCommands(true);
+            } else {
+                printDebugInfo('Pixel juz zostal zaladowany przez kogos innego');
+            }
+        }
+    };
+
+    function initCommands(loadPixel) {
+        if (loadPixel) {
+          printDebugInfo('Ladujemy pixel admonksa');
+          loadFbPixel();
+        }
+        trackPageView();
+        trackAddToCart();
+        trackPurchase();
+        trackViewContent();
+        trackViewCategory();
+    }
+
+    function trackPageView() {
+      fbq('trackSingle', pixelId, 'PageView');
+      printDebugInfo("['trackSingle', 'PageView']");
+    }
+
+    function trackPurchase() {
+        var url = window.location.pathname;
+        if ((typeof Shopify.checkout !== 'undefined') && (url.indexOf('/thank_you') !== -1)) {
+            order = Shopify.checkout
+            var subtotal = order.subtotal_price;
+            var total = order.total_price;
+            var currency = order.currency;
+            var amount = (subtotal > 0 ? subtotal : total);
+            var i, len;
+            var lineItems = order.line_items
+            for (i = 0, len = lineItems.length; i < len; ++i) {
+                products.push(lineItems[i]['product_id']);
+            }
+            purchaseInfo = {
+                content_type: 'product',
+                value: amount,
+                content_ids: products,
+                currency: currency,
+                product_catalog_id: productCatalogId
+            };
+            fbq('trackSingle', pixelId, 'Purchase', purchaseInfo);
+            printDebugInfo("['trackSingle', 'Purchase']");
+        }
+    }
+
+
+    function loadFbPixel() {
+        !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+            n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+            document,'script','https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', pixelId);
+        printDebugInfo("['init', 'pixelId']");
+    }
+
+
+    function addToCart() {
+        if (cartTracked) {
+            printDebugInfo('AddToCart event already tracked, skipping');
+            return;
+        }
+        cartTracked = true;
+        addToCartInfo = {
+            content_ids: products,
+            content_type: 'product',
+            product_catalog_id: productCatalogId
+        };
+        fbq('trackSingle', pixelId, 'AddToCart', addToCartInfo);
+        printDebugInfo("['trackSingle', 'AddToCart']");
+    }
+
+
+    function trackAddToCart() {
+        trackAddToCartForm();
+        trackAddToCartAjax();
+    }
+
+
+    function trackAddToCartForm() {
+        _jquery("form[action^='/cart/add']").on('submit', function (e) {
+            if (!(e.defaultPrevented || e.isDefaultPrevented && e.isDefaultPrevented())) {
+                addToCart();
+            }
+        });
+    }
+
+
+    function trackAddToCartAjax() {
+        var xmlHttpRequestOpen = XMLHttpRequest.prototype.open;
+        var xmlHttpRequestSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function (method, url) {
+            this._url = url;
+            this._method = method;
+            xmlHttpRequestOpen.apply(this, arguments);
+        };
+        XMLHttpRequest.prototype.send = function () {
+            this.addEventListener('readystatechange', function () {
+                if (this.readyState === 4) {
+                    if (this._url === '/cart/add.js') {
+                        var product = JSON.parse(this.responseText);
+                        products = [];
+                        products.push(product.product_id);
+                        addToCart();
+                    }
+                }
+            });
+            xmlHttpRequestSend.apply(this, arguments);
+        }
+    }
+
+
+    function trackViewContent() {
+        if (url.indexOf('/products/') !== -1) {
+            printDebugInfo('On product page');
+            products.push(__st.rid);
+            viewContentInfo = {
+                content_ids: products,
+                content_type: 'product',
+                product_catalog_id: productCatalogId
+
+            };
+            a = new Date();
+            setTimeout(function(){
+              fbq('trackSingle', pixelId, 'ViewContent', viewContentInfo);
+              printDebugInfo("['trackSingle', 'ViewContent']");
+              b = new Date();
+              printDebugInfo(((b-a)/1000) + " seconds delay")
+            }, 10000);
+
+
+
+        }
+    }
+
+
+    function trackViewCategory() {
+
+      if (url.indexOf('/collections/') !== -1 && url.indexOf('/products/') == -1) {
+        printDebugInfo('On collection page');
+        _jquery.ajax({
+          type: 'GET',
+          url: url.match(/\/collections\/([a-z0-9\-]+)/)[0] + '/products.json',
+          cache: false,
+          dataType: 'json',
+          success: function (response) {
+            console.log(response);
+            if (response.products && response.products.length > 0) {
+              var productIds = _jquery.map(response.products.slice(0, 12), function(val, i) {
+                return val.id;
+              })
+              if (productIds.length > 0) {
+                var viewCategoryInfo = {
+                  ids: productIds
+                };
+                fbq('trackSingleCustom', pixelId, 'ViewCategory', viewCategoryInfo);
+                printDebugInfo("['trackCustom', 'ViewCategory']");
+              }
+            }
+          }
+        });
+      }
+    }
+
+
+    if (pixelId) {
+      initTracking();
+    }
+
+//    SET ABANDONED CART
+//    CREATING COOKIES BASED ON WHITELISTED URL PARAMS
+    if(window.location.href.split('?').length > 1){
+      var whitelisted = ['adm_cart', 'discount'];
+      var redirect = false;
+      var params = window.location.href.split('?')[1];
+      var splitted = params.split('&');
+      if(splitted.length > 0){
+
+        splitted.forEach(function(param){
+          whitelisted.forEach(function(whitelisted){
+            if(param.match(new RegExp(whitelisted))){
+              key = param.split('=')[0]
+              val = param.split('=')[1]
+
+              switch(whitelisted) {
+                case 'adm_cart':
+                  createCookie('cart', val);
+                  redirect = true;
+                  break;
+                case 'discount':
+                  // createCookie(key, val, 1);
+                  createCookie(key, val);
+                  break;
+                default:
+                  createCookie(key, val);
+              }
+            }
+          })
+        })
+        if(redirect){
+          window.location.href = "/cart";
+        }
+      }
+    }
+
+    if (getCookie('discount') && window.location.pathname.match(/cart/)){
+      var cart_form = document.querySelectorAll('form.cart')[0];
+      if(cart_form == undefined){
+        cart_form = document.querySelectorAll('form.cart-wrapper')[0];
+      }
+
+      if(cart_form){
+        var old_action = cart_form.getAttribute('action');
+        var new_action = old_action + "?discount="+getCookie('discount');
+        cart_form.setAttribute('action', new_action);
+
+        var checkout_btn = cart_form.querySelectorAll("button[name='checkout']")[0]
+        if(checkout_btn == undefined) {
+          checkout_btn = cart_form.querySelectorAll("input[name='checkout']")[0]
+        }
+        if(checkout_btn){
+          checkout_btn.click()
+        }
+      }
+    }
+
+  function createCookie(name,val,expire_in_days=undefined){
+    if(expire_in_days == undefined){
+      document.cookie = name+'='+val+';path=/;'
+    }else{
+      date = new Date();
+      date.setTime(date.getTime()+(expire_in_days*24*60*60*1000));
+      expires = "expires="+date.toGMTString();
+      document.cookie = name+'='+val+';path=/;'+expires;
+    }
+  }
+
+  function getCookie (name) {
+    var value = "; " + document.cookie;
+    var parts = value.split("; " + name + "=");
+    if (parts.length == 2) return parts.pop().split(";").shift();
+  };
+
+  function sleep(milliseconds) {
+    var start = new Date().getTime();
+    for (var i = 0; i < 1e7; i++) {
+      if ((new Date().getTime() - start) > milliseconds){
+        break;
+      }
+    }
+  };
+
+  function deleteCookie (name){
+    document.cookie = name + "=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+  };
+
+    
+
+})();
+

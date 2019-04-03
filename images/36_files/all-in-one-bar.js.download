@@ -1,0 +1,411 @@
+var allinone_base = 'https://hektorcommerce.com/apps/freebar';
+var browser = ( detectmob() == true ? 'mobile' : 'pc' );
+
+(function(){
+    var loadScript = function(url, callback){
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+
+        // If the browser is Internet Explorer.
+        if (script.readyState){ 
+            script.onreadystatechange = function(){
+                if (script.readyState == "loaded" || script.readyState == "complete"){
+                  script.onreadystatechange = null;
+                  callback();
+                }
+            };
+        // For any other browser.
+        } else {
+            script.onload = function(){
+                callback();
+            };
+        }
+
+        script.src = url;
+        document.getElementsByTagName("head")[0].appendChild(script);
+    };
+
+    var loadStyle = function(url, callback){
+        var script = document.createElement("link");
+        script.type = "text/css";
+        script.rel = "stylesheet";
+
+        // If the browser is Internet Explorer.
+        if (script.readyState){ 
+            script.onreadystatechange = function(){
+                if (script.readyState == "loaded" || script.readyState == "complete"){
+                  script.onreadystatechange = null;
+                  callback();
+                }
+            };
+        // For any other browser.
+        } else {
+            script.onload = function(){
+                callback();
+            };
+        }
+
+        script.href = url;
+        document.getElementsByTagName("head")[0].appendChild(script);
+    };
+var bottom = '';
+    /* This is my app's JavaScript */
+    var announcebarScript = function($){
+        var custom_div = false;
+        //get current product url
+        var current_product = '';
+        var current_url = window.location.href;
+        if( current_url.indexOf( '/products/' ) > -1 ) {
+            var br = current_url.split('/products/');
+            br = br[1].split( '?' );
+            br = br[0].split( '/' );
+            current_product = br[0];
+        } else if( current_url.indexOf( '/cart' ) > -1 ) {
+            var cart_page = true;
+        }
+
+        var icons_loaded = false;
+        var visitor_country = '';
+
+        $( document ).ready(function( $ ){
+            $.post(          
+                allinone_base + "/recommendations", 
+                { shop: Shopify.shop, browser : browser, current_url : window.location.href }
+                    ).done(function( data ) {
+                        if( data.announcement.enabled != null ) {
+                            /*
+                            ** check if bar was disabled using cross button by user
+                            */
+                            var cookie = document.cookie;
+                            if( cookie.indexOf( 'allinone_bar' ) < 0 ) {
+
+                                /*
+                                ** check if geo-targetting enabled
+                                ** if enabled, then find current ip, location and check it matches
+                                ** if doesn't match, don't continue showing content
+                                */
+                                var display = true;
+								
+								if( data.announcement['announcement_geotarget_enable'] == 'enabled' ) {
+                                    display = false;
+                                    $.getJSON('https://freegeoip.net/json/', function(){}).done( function( location ) {
+                                        visitor_country = location['country_code'].trim();
+                                        if( display != true) {
+                                            if( data.announcement['announcement_geotargets'].length > 0 ) {
+                                                for( var gcc = 0; gcc < data.announcement['announcement_geotargets'].length; gcc++ ) {
+                                                    
+                                                    if( data.announcement['announcement_geotargets'][gcc].trim() == visitor_country ) {
+                                                        display = true;
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        if( display == true ) {
+											
+											setTimeout(function() {
+											   show_allinone_bar( $, data.announcement );
+
+											  },data.announcement['show'] );
+										}
+                                    });
+                                
+                                } else {
+									
+									setTimeout(function() {
+									   show_allinone_bar( $, data.announcement );
+
+									  },data.announcement['show'] );
+								}
+								
+								
+                               
+                            }
+                        }
+            });
+        });
+
+    };
+
+    /* If jQuery has not yet been loaded or if it has but it's too old for our needs,
+    we will load jQuery from the Google CDN, and when it's fully loaded, we will run
+    our app's JavaScript. Set your own limits here, the sample's code below uses 1.7
+    as the minimum version we are ready to use, and if the jQuery is older, we load 1.9. */
+    if ((typeof jQuery === 'undefined') || (parseFloat(jQuery.fn.jquery) < 1.7)) {
+
+        loadScript('//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js', function(){
+            jQuery8001 = jQuery.noConflict(true);
+			loadScript(allinone_base+'/files/js/jquery.countdown.js', function(){});
+			loadStyle('//cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.1/animate.min.css', function(){});
+			announcebarScript(jQuery8001);
+        });
+    } else {
+		loadScript(allinone_base+'/files/js/jquery.countdown.js', function(){});
+		loadStyle('//cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.1/animate.min.css', function(){});
+		
+		announcebarScript(jQuery); 
+    }
+
+    function show_allinone_bar( $, design ) {
+	console.log(design);
+      var pitch = design['announcement_pitch_text_1'];
+      if( pitch.indexOf('[GREETINGS]') > -1 ) {
+          var today = new Date();
+          var curHr = today.getHours();
+          var greetings = '';
+
+          if (curHr < 12) greetings = 'Good morning';
+          else if (curHr < 18) greetings = 'Good afternoon';
+          else greetings = 'Good evening';
+
+          pitch = pitch.replace( '[GREETINGS]', greetings );
+      } 
+
+      var button_html = '<a href="' + design['announcement_button_permalink'] + '" ' + design['target'] + '" style="text-decoration: none; background-color: ' + design['announcement_button_color'] + '; border-color: ' + design['announcement_button_color'] + '; color: ' + design['announcement_button_text_color'] + ';'+ ( design['button_weight'] == 'bold' ? 'font-weight: ' + ( browser == 'mobile' ? 14 : design['button_weight'] ) : 'font-style: ' + design['button_weight'] ) + '; display: inline-block; padding: 3px 6px; margin-bottom: 0; font-weight: 400; line-height: 1.42857143; text-align: center; white-space: nowrap; vertical-align: middle; -ms-touch-action: manipulation; touch-action: manipulation; cursor: pointer; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; background-image: none; border: 1px solid transparent; border-radius: 4px;">' + design['announcement_button_text'] + '</a>';
+
+      pitch = pitch.replace( '[BUTTON]', button_html );
+      pitch = pitch.replace( '[TIMER]', '<span id="wpnbio-countdown" class="wpnbio-section"></span>' );
+	  
+	  var cross_html = '';
+	  if ( design['announcement_bar_cross_button'] == 'enabled') {
+		cross_html = ' <span style="float: right; margin-right: 5px;"><a href="#" class="announcement_cross_bar"><img src="' + allinone_base + '/files/images/fi-x-circle.png" style="min-width: 25px; min-height: 25px; width: 25px;"></a></span>';
+	 }
+      var text_html = '<table style="border:none; padding: 0px; margin: 0px; background-color:' + ( design['announcement_background_color'] != '' ? design['announcement_background_color'] : '#7222d7' ) + ';" width="100%"><tr style="border:none; padding: 0px; margin: 0px;"><td width="3%" style="border:none; padding: 0px; margin: 0px;">&nbsp;</td><td width="94%" style="border:none; text-align:center; padding: 0px; margin: 0px;">' + pitch + '</td><td width="3%" style="border:none; padding: 0px; margin: 0px; vertical-align: top;">' + cross_html + '</td></tr></table>';
+      var html = '';
+
+      if( ( design['announcement_bar_position'] == 'slide' ) || ( design['announcement_bar_position'] == 'hide' ) ) {
+          var top_offset = 0;
+          if( document.getElementById('admin_bar_iframe') != undefined ) {
+            var el = document.getElementsByTagName('body')[0];
+            el = el.getBoundingClientRect();
+            top_offset = ( top_offset + el.top + window.scrollY );
+          }
+ 
+          html += '<div id="allinone_bar" class="allinone_bar" style="display:none; position:fixed; ' + ( design['announcement_bar_location'] != 'bottom' ? 'top:' + top_offset + 'px;' : 'bottom:0px;' ) + ' left: 0px; right: 0px; width:100%; text-align:center; background-color:' + ( design['announcement_background_color'] != '' ? design['announcement_background_color'] : '000000' ) + '; padding:' + ( design['announcement_padding'] != '' ? design['announcement_padding'] : '4' ) + 'px; border-bottom: ' + ( design['border_width'] != '' ? design['border_width'] : '1' ) + 'px solid ' + ( design['announcement_bottom_border_color'] != '' ? design['announcement_bottom_border_color'] : 'ffffff' ) + '; border-left: ' + ( design['border_width'] != '' ? design['border_width'] : '1' ) + 'px solid ' + ( design['announcement_bottom_border_color'] != '' ? design['announcement_bottom_border_color'] : 'ffffff' ) + '; border-right: ' + ( design['border_width'] != '' ? design['border_width'] : '1' ) + 'px solid ' + ( design['announcement_bottom_border_color'] != '' ? design['announcement_bottom_border_color'] : 'ffffff' ) + '; color: ' + design['announcement_pitch_font_color'] + '; '+ ( design['announcement_pitch_font_weight'] == 'bold' ? 'font-weight: ' + ( browser == 'mobile' ? 14 : design['announcement_pitch_font_weight'] ) : 'font-style: ' + design['announcement_pitch_font_weight'] ) + '; font-size: ' + ( browser == 'mobile' ? 14 : design['announcement_pitch_font_size'] )  + 'px; z-index:10001;">';
+              html += text_html.replace( 'id="announcement_bar_timer_display"', 'id="announcement_bar_timer_display_hide"' );
+          html += '</div>';
+      }
+		var position = 'relative';
+		if( design['announcement_bar_location'] == 'bottom' ){
+			var position = 'fixed';
+		}
+	
+      html += '<div id="allinone_bar_fixed" class="allinone_bar" style="display:none; position: '+ position +';' + ( design['announcement_bar_location'] != 'bottom' ? 'top:0px;' : 'bottom:0px;' ) + ' width:100%; text-align:center; background-color:' + ( design['announcement_background_color'] != '' ? design['announcement_background_color'] : '000000' ) + '; padding:' + ( design['announcement_padding'] != '' ? design['announcement_padding'] : '4' ) + 'px; border-bottom: ' + ( design['border_width'] != '' ? design['border_width'] : '1' ) + 'px solid ' + ( design['announcement_bottom_border_color'] != '' ? design['announcement_bottom_border_color'] : 'ffffff' ) + '; border-left: ' + ( design['border_width'] != '' ? design['border_width'] : '1' ) + 'px solid ' + ( design['announcement_bottom_border_color'] != '' ? design['announcement_bottom_border_color'] : 'ffffff' ) + '; border-right: ' + ( design['border_width'] != '' ? design['border_width'] : '1' ) + 'px solid ' + ( design['announcement_bottom_border_color'] != '' ? design['announcement_bottom_border_color'] : 'ffffff' ) + '; color: ' + design['announcement_pitch_font_color'] + '; '+ ( design['announcement_pitch_font_weight'] == 'bold' ? 'font-weight: ' + ( browser == 'mobile' ? 14 : design['announcement_pitch_font_weight'] ) : 'font-style: ' + design['announcement_pitch_font_weight'] ) + '; font-size: ' + ( browser == 'mobile' ? 14 : design['announcement_pitch_font_size'] ) + 'px; z-index:10000; overflow:hidden; -webkit-backface-visibility: hidden;">';
+          html += text_html;
+      html += '</div>';
+	html += '<style>.allinone_bar.animated{ padding:10px 0; } table .wpnbio-section.hasCountdown { display:inline-block; } table .wpnbio-section.hasCountdown  span , table .wpnbio-section.hasCountdown  span  span , table .wpnbio-section.hasCountdown  span  span span{ display:inline-block; } table .wpnbio-section.hasCountdown span  span br  { display:none; } table .wpnbio-section.hasCountdown  span  span { padding:0 1px !important; } table .wpnbio-section.hasCountdown  span  span span{ display:inline-block; padding:0 2px 0 0 !important; font-weight:bold; } </style>';
+      if( design['announcement_bar_location'] != 'bottom' ) $('body').prepend( html );
+      else $('body').append( html );
+	bottom = design['announcement_bar_location'];
+	if( design['hide'] > 0 ) {
+      setTimeout(function() {
+			jQuery('.allinone_bar').fadeOut('fast');
+			
+			if( design['announcement_bar_location'] == 'bottom' ){
+				$('body').append('<div id="wpnbio-show" style=" bottom:0;position:fixed;text-align: center;height:32px; width:40px;z-index:999999; right:10px;cursor:pointer;" ><img src="' + allinone_base + '/files/images/open2.png"></div>');
+			}else {
+				$('body').prepend( '<div id="wpnbio-show" style=" position:fixed;text-align: center;height:32px; width:40px;z-index:999999; right:10px;cursor:pointer;"><img src="' + allinone_base + '/files/images/open1.png"></div>' );
+			}
+		}, design['hide']); 
+	}
+	
+	
+      if( design['announcement_bar_location'] != 'bottom' ) {
+        var slidedownselector = ( detectmob() != false ? "#allinone_bar_fixed" : ".allinone_bar" );
+      } else {
+        var slidedownselector = ".allinone_bar";
+      }
+      
+      $('.announcement_cross_bar').click(function() {
+        //save that user doesn't want to see the bar anymore
+        $(slidedownselector).slideUp('slow', 'swing', function(){
+            document.cookie = "allinone_bar=1;";
+        });
+      });
+
+      $(slidedownselector).slideDown('slow', 'swing', function(){
+        if( design['announcement_bar_position'] == 'hide' ) {
+          var display_time = ( design['announcement_bar_display_time'] != '' ? parseInt( design['announcement_bar_display_time'] ) : 5 );
+          setTimeout(function() {
+            $(slidedownselector).slideUp('slow', 'swing', function(){
+            });
+          }, ( display_time * 1000 ) );
+        }
+      });
+
+      /*
+      ** For some themes, there is a fixed bar in the top, for those, we will load suprbar under that
+      ** Fixed bar will load as it is, we are tracking it's top position and then reposition float bar top based on that
+      */
+      
+      /* -- Fixed -- */
+	  
+	  
+	  if(design['text_font'] != 0 ) { 
+		loadStyle('//fonts.googleapis.com/css?family='+design['text_font'].replace(" ","+"), function(){});
+		 
+		jQuery('.allinone_bar').css({'font-family':design['text_font'],'font-weight':design['announcement_pitch_font_weight'],'font-style':design['text_weight'],'font-size':design['announcement_pitch_font_size']});
+	  }
+	  if(design['announcement_pitch_font_weight'] != 0 ) { 
+		 
+		jQuery('.allinone_bar').css({'font-weight':design['announcement_pitch_font_weight'],'font-size':design['announcement_pitch_font_size']});
+	  }
+	 if(design['button_font'] != 0 ) {
+		loadStyle('//fonts.googleapis.com/css?family='+design['button_font'].replace(" ","+"), function(){});
+		jQuery('.allinone_bar a').css({'font-family':design['button_font']});
+	  }
+	  if(design['button_weight'] != 0 ) {
+		
+		jQuery('.allinone_bar a').css({'font-weight':design['button_weight']});
+	  }
+	  
+	if(design['announcement_timer_font_color']){
+		jQuery('.allinone_bar').css('color',design['announcement_timer_font_color']);
+	}
+	
+	
+		jQuery(".allinone_bar").show().addClass('animated '+design['container_effect_animation']);
+		
+		if( design['enable_countdown'] == 1) { 
+			front_timer_html1( 'wpnbio-countdown', design );
+		}
+		
+		
+		jQuery('.allinone_bar').append("<style id='tmp-custom-css-style' type='text/css'>"+design['custom_css']+"</style>");
+		
+		if( ( design['announcement_bar_location'] != 'bottom' ) && ( document.getElementsByClassName('allinone_bar') != null ) ) {
+			var fixedbar_pos = getPos( document.getElementById('allinone_bar_fixed') );
+		
+			if( document.getElementsByClassName('allinone_bar') != undefined ) document.getElementsByClassName('allinone_bar').style.top = ( top_offset + fixedbar_pos.y ) + 'px';
+		  }
+		  
+		  
+    
+	}
+
+	jQuery(window).scroll(function() {
+		
+		
+		
+		if( bottom == 'bottom' ) {
+			var fixmeTop = jQuery('.allinone_bar');
+			var pos = fixmeTop.offset().top+fixmeTop.height(); //offset that you need is actually the div's top offset + it's height
+			var currentScroll = jQuery(window).scrollTop();
+			var windowpos = jQuery(window).scrollTop(); //current scroll position of the window
+			var windowheight = jQuery(window).height(); //window height
+			
+			if (windowpos+windowheight >= pos && pos > 0 && browser != 'mobile') {
+				jQuery('.allinone_bar').css({
+					position: 'fixed',
+					bottom: '0',
+					top: 'auto'
+				});
+			} else {
+				jQuery('.allinone_bar').css({
+					position: 'fixed'
+				});
+			}
+
+		} else {
+			var fixmeTop = jQuery('.allinone_bar').offset().top;
+			var currentScroll = jQuery(window).scrollTop();
+			if (currentScroll >= fixmeTop && currentScroll > 0 && browser != 'mobile') {
+				jQuery('.allinone_bar').css({
+					position: 'fixed',
+					top: '0',
+					left: '0'
+				});
+			} else {
+				jQuery('.allinone_bar').css({
+					position: 'fixed'
+				});
+			}
+		}
+	});
+	
+	jQuery( document ).on('click',"#wpnbio-show",function() {
+		jQuery(this).hide();
+		jQuery('.allinone_bar').show();
+	});
+		
+		
+	function front_timer_html1( id, design ) { 
+		var endDate = new Date();
+		var now = new Date();
+		
+	
+		//console.log( monthNames[ design['mon'] ]+"6666666");
+		//endDate= new Date(design['year'], design['mon'], design['mday'], design['totalHours'], design['minutes'], '00');
+	//	endDate= new Date( monthNames[ design['mon'] ]+' '+ design['mday']+' '+ design['year']+' '+ design['hours']+':'+ design['minutes'] + ':00' + ' GMT'+ design['offset'] );
+		endDate= new Date(design['year'], design['mon'], design['mday'], design['hours'], design['minutes'], '00');
+		if (endDate.getTime() < now.getTime()) {
+			jQuery('#wpnbio-countdown').remove();
+		} else {
+			var expiry = '';
+			if(design['expiry'] != '' )	{  
+				if( jQuery('#'+id).length > 0 ) {
+					jQuery('#'+id).countdown({
+							labels: ['Years', 'Months', 'Weeks', design['announcement_timer_label_days'], design['announcement_timer_label_hours'], design['announcement_timer_label_minutes'] ,design['announcement_timer_label_seconds'] ],
+							labels1: ['Years', 'Months', 'Weeks', design['txt_countdown_day'], design['txt_countdown_hour'], design['txt_countdown_minute'], design['txt_countdown_second'] ],
+							until: endDate,
+							timezone: design['offset'],
+							format: design['countdown_format'],
+							onExpiry: 'wpnbio_disable',
+					});
+				}
+			} else { 
+				if( jQuery('#'+id).length > 0 ) {
+					jQuery('#'+id).countdown({
+							labels: ['Years', 'Months', 'Weeks', design['announcement_timer_label_days'], design['announcement_timer_label_hours'], design['announcement_timer_label_minutes'] ,design['announcement_timer_label_seconds'] ],
+							labels1: ['Years', 'Months', 'Weeks', design['txt_countdown_day'], design['txt_countdown_hour'], design['txt_countdown_minute'], design['txt_countdown_second'] ],
+							until: endDate,
+						timezone: design['offset'],
+						format: design['countdown_format'],
+							
+							format: design['countdown_format']
+					});
+				}
+			}
+		}
+	 
+	}
+
+})();
+
+function wpnbio_disable(){
+	jQuery(".allinone_bar").hide();
+}
+
+function parseDate(date) {
+  const parsed = Date.parse(date);
+  if (!isNaN(parsed)) {
+    return parsed;
+  }
+
+  return Date.parse(date.replace(/-/g, '/').replace(/[a-z]+/gi, ' '));
+}
+
+function getUrlVars() {
+  var vars = {};
+  var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,    
+  function(m,key,value) {
+    vars[key] = value;
+  });
+  return vars;
+}
+
+function detectmob() {
+   if(window.innerWidth <= 800) {
+     return true;
+   } else {
+     return false;
+   }
+}
+
+function getPos(el) {
+    // yay readability
+    for (var lx=0, ly=0;
+         el != null;
+         lx += el.offsetLeft, ly += el.offsetTop, el = el.offsetParent);
+    return {x: lx,y: ly};
+}

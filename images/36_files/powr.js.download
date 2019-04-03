@@ -1,0 +1,369 @@
+!(function() {
+  if ('undefined' == typeof loadPowr) {
+    window.addEventListener ? window.addEventListener('message', t) : window.attachEvent('onmessage', t);
+    var U = 0;
+    POWR_RECEIVERS = [];
+    var n = document.createEvent('Event');
+    n.initEvent('powrPingListener', !0, !0),
+      (loadPowr = function() {
+        for (
+          var t = null, e = null, n = null, o = !1, r = document.querySelectorAll('script'), i = 0;
+          i < r.length;
+          i++
+        ) {
+          var a = r[i],
+            l = a.getAttribute('src');
+          if (null != l) {
+            var d = a.getAttribute('powr-token'),
+              s = a.getAttribute('external-type'),
+              c = a.getAttribute('template-powr-token'),
+              u = a.getAttribute('powr-load');
+            if (
+              (null == u && (u = 'async'),
+              G() && G() <= 9 && (u = 'sync'),
+              (o = a.getAttribute('demo-mode')),
+              null != d
+                ? (t = d)
+                : -1 < l.search('powr-token') &&
+                  void 0 !== (n = z(l))['powr-token'] &&
+                  0 < n['powr-token'].length &&
+                  (t = n['powr-token']),
+              null != s
+                ? (e = s)
+                : -1 < l.search('external-type') &&
+                  null != (n = z(l))['external-type'] &&
+                  0 < n['external-type'].length &&
+                  (e = n['external-type']),
+              null != t || null != e)
+            )
+              break;
+          }
+        }
+        if (null == t || 0 == t.length)
+          try {
+            t = window.top.location.host;
+          } catch (e) {
+            t = '';
+          }
+        var p = /\[powr-[^\]]*\]/gi,
+          E = /\[powr-[^\s\]]*/gi,
+          g = document.querySelectorAll('a');
+        for (i = 0; i < g.length; i++) {
+          if (!X((f = g[i]))) {
+            var w = f.previousSibling,
+              m = f.nextSibling;
+            if (
+              w &&
+              m &&
+              f.getAttribute('href') &&
+              -1 < f.getAttribute('href').search('tel') &&
+              3 == w.nodeType &&
+              3 == m.nodeType &&
+              w.nodeValue.match(E) &&
+              -1 < m.nodeValue.search(']')
+            ) {
+              var v = f.innerHTML,
+                R = w.nodeValue.match(/powr-[^\s\]]*/gi)[0];
+              ((C = document.createElement('div')).innerHTML = '<div class="' + R + '" label="' + v + '"></div>'),
+                w.parentNode.removeChild(w),
+                m.parentNode.removeChild(m),
+                f.parentNode.replaceChild(C, f);
+            }
+          }
+        }
+        for (g = document.querySelectorAll('body, body *'), i = 0; i < g.length; i++) {
+          var f,
+            h = (f = g[i]).childNodes;
+          if (!X(f))
+            for (var y = 0; y < h.length; y++) {
+              var _ = h[y];
+              if (3 == _.nodeType) {
+                var C,
+                  S = _.nodeValue,
+                  O = S.replace(p, j);
+                if (O != S) ((C = document.createElement('div')).innerHTML = O), f.replaceChild(C, _);
+              }
+            }
+        }
+        if (0 == document.querySelectorAll('#powrIframeLoader').length) {
+          var I = document.createElement('div'),
+            P = document.getElementsByTagName('base')[0] || document.getElementsByTagName('script')[0];
+          (I.id = 'powrIframeLoader'),
+            (I.innerHTML = '&shy;<style> .powrLoaded iframe { visibility: hidden; } </style>'),
+            P.parentNode.insertBefore(I, P);
+        }
+        var b = document.querySelectorAll('[class*=powr-]'),
+          W = !1;
+        for (i = 0; i < b.length; i++) {
+          var V = b[i];
+          if (!X(V) && !(V instanceof SVGElement || -1 < V.className.search('powrLoaded'))) {
+            var L = V.className.split(/\s+/);
+            for (y = 0; y < L.length; y++)
+              if (0 === L[y].toLowerCase().search('powr-')) {
+                var A = L[y].toLowerCase().replace('powr-', '');
+                break;
+              }
+            if (void 0 !== A) {
+              'popup' == A && (W = !0);
+              var x = V.getAttribute('label');
+              if ((null == x && (x = ''), 'weebly_' != x)) {
+                (V.className += ' powrLoaded'), null == c && (c = '');
+                var N = V.getAttribute('id');
+                null == N && (N = '');
+                var k = V.getAttribute('view-mode'),
+                  T = 'true' == o || 'true' == V.getAttribute('demo-mode'),
+                  M =
+                    'https://www.powr.io/plugins/' +
+                    A +
+                    '/cached_view?load=' +
+                    u +
+                    '&index=' +
+                    U +
+                    '&unique_label=' +
+                    N +
+                    '&powr_token=' +
+                    t +
+                    '&user_label=' +
+                    encodeURIComponent(x) +
+                    '&demo_mode=' +
+                    T,
+                  q =
+                    'https://www.powr.io/plugins/' +
+                    A +
+                    '/view.json?unique_label=' +
+                    N +
+                    '&powr_token=' +
+                    t +
+                    '&user_label=' +
+                    encodeURIComponent(x) +
+                    '&demo_mode=' +
+                    T;
+                if (
+                  (null != e && ((q += '&external_type=' + e), (M += '&external_type=' + e)),
+                  null != c && ((q += '&template_powr_token=' + c), (M += '&template_powr_token=' + c)),
+                  null != k && ((q += '&view_mode=' + k), (M += '&view_mode=' + k)),
+                  Y(),
+                  Y() && (q += '&url=' + encodeURIComponent(Y())),
+                  document.location.host)
+                )
+                  var H = document.location.protocol + '//' + document.location.host;
+                else
+                  try {
+                    H = document.location.ancestorOrigins[0];
+                  } catch (e) {
+                    if (window.top && window.top.location && window.top.location.host)
+                      H = window.top.location.protocol + '//' + window.top.location.host;
+                    else H = '';
+                  }
+                (q += '&request_url=' + encodeURIComponent(H)),
+                  (M += '&request_url=' + encodeURIComponent(document.location.href));
+                var J = document.createElement('iframe');
+                (J.src = M),
+                  J.setAttribute('powrindex', U),
+                  (J.width = '100%'),
+                  (J.height = '0px'),
+                  (J.style.height = '0px'),
+                  (J.style.display = 'block'),
+                  (J.frameBorder = '0'),
+                  (J.style.visibility = 'visible'),
+                  J.setAttribute('webkitallowfullscreen', ''),
+                  J.setAttribute('mozallowfullscreen', ''),
+                  J.setAttribute('allowfullscreen', '');
+                try {
+                  /iPhone|iPod|iPad/.test(navigator.userAgent) &&
+                    ((J.style.minWidth = '100%'), (J.style.width = '1px'), J.setAttribute('scrolling', 'no'));
+                } catch (e) {
+                  console.log('Err: ' + e);
+                }
+                F(J, U, M), V.appendChild(J);
+                var B = J.contentWindow;
+                POWR_RECEIVERS.push({receiver: B, url: M, data_url: q}), 'async' == u && (Q(U), K(U, J)), U++;
+              }
+            }
+          }
+        }
+        W &&
+          (D(document, 'click', function(e) {
+            var t = (e = e || window.event).relatedTarget || e.toElement || e.target;
+            if (t && t.classList.contains('trigger-popup'))
+              for (var n = 0; n < POWR_RECEIVERS.length; n++)
+                POWR_RECEIVERS[n].receiver.postMessage(
+                  JSON.stringify({message: 'triggerPowrPopupClick'}),
+                  POWR_RECEIVERS[n].url
+                );
+          }),
+          D(document, 'mouseout', function(e) {
+            if ((e = e || window.event).clientY < 5)
+              for (var t = 0; t < POWR_RECEIVERS.length; t++)
+                POWR_RECEIVERS[t].receiver.postMessage(
+                  JSON.stringify({message: 'exitDocument'}),
+                  POWR_RECEIVERS[t].url
+                );
+          }));
+      });
+    for (var e = 0; e < 10; e++)
+      setTimeout(function() {
+        loadPowr();
+      }, 2e3 * e);
+    D(window, 'load', loadPowr);
+    var o = !1;
+    D(window, 'keydown', function(e) {
+      if (
+        (80 == e.keyCode &&
+          ((o = !0),
+          setTimeout(function() {
+            o = !1;
+          }, 2e3)),
+        38 == e.keyCode && o)
+      ) {
+        for (var t = 0; t < POWR_RECEIVERS.length; t++)
+          POWR_RECEIVERS[t].receiver.postMessage(JSON.stringify({message: 'showEdit'}), POWR_RECEIVERS[t].url);
+        return e.preventDefault(), !1;
+      }
+      if (40 == e.keyCode && o) {
+        for (t = 0; t < POWR_RECEIVERS.length; t++)
+          POWR_RECEIVERS[t].receiver.postMessage(JSON.stringify({message: 'hideEdit'}), POWR_RECEIVERS[t].url);
+        return e.preventDefault(), !1;
+      }
+    });
+  }
+  function D(e, t, n) {
+    e.addEventListener ? e.addEventListener(t, n, !1) : e.attachEvent && e.attachEvent('on' + t, n);
+  }
+  function j(e, t, n, o, r, i) {
+    var a = e,
+      l = a.match(/powr-[^\s\]]*/i),
+      d = a.match(/id="[^"]*"/i);
+    null == d && (d = a.match(/id='[^']*'/i)),
+      null == d && null != (d = a.match(/id=[^\]]*/i)) && (d = d[0].replace('id=', 'id="') + '"'),
+      null == d && (d = a.match(/label="[^"]*"/i)),
+      null == d && (d = a.match(/label='[^']*'/i)),
+      null == d && (d = '');
+    var s = '<div class="' + l + '" ' + d + '></div>';
+    return s;
+  }
+  function z(e) {
+    for (var t = {}, n = e.search('\\?'), o = (e = e.substr(n + 1)).split('&'), r = 0; r < o.length; r++) {
+      var i = o[r].split('=');
+      if (void 0 === t[i[0]]) t[i[0]] = i[1];
+      else if ('string' == typeof t[i[0]]) {
+        var a = [t[i[0]], i[1]];
+        t[i[0]] = a;
+      } else t[i[0]].push(i[1]);
+    }
+    return t;
+  }
+  function G() {
+    var e = navigator.userAgent.toLowerCase();
+    return -1 != e.indexOf('msie') && parseInt(e.split('msie')[1]);
+  }
+  function X(e) {
+    for (var t = !1, n = e; n && n !== document; n = n.parentNode)
+      if (null != n.classList && n.classList.contains('powr-ignore')) {
+        t = !0;
+        break;
+      }
+    return t;
+  }
+  function Y() {
+    try {
+      return window.top.location.href;
+    } catch (e) {
+      return '';
+    }
+  }
+  function F(t, n, o) {
+    function e() {
+      var e = {
+        message: 'loaded',
+        data: {
+          iframe_index: n,
+          parent_window_width:
+            window.innerWidth ||
+            document.documentElement.clientWidth ||
+            document.getElementsByTagName('body')[0].clientWidth,
+          parent_window_height:
+            window.innerHeight ||
+            document.documentElement.clientHeight ||
+            document.getElementsByTagName('body')[0].clientHeight,
+        },
+      };
+      t.contentWindow.postMessage(JSON.stringify(e), o);
+    }
+    t.addEventListener ? t.addEventListener('load', e) : t.attachEvent('onload', e);
+  }
+  function K(t, e) {
+    e.addEventListener &&
+      (e.addEventListener(
+        'powrPingListener',
+        function() {
+          return (POWR_RECEIVERS[t].listenerConnected = !0);
+        },
+        !1
+      ),
+      (POWR_RECEIVERS[t].ping_interval = setInterval(function() {
+        var e = document.querySelectorAll('[powrindex="' + t + '"]')[0];
+        e &&
+          ((POWR_RECEIVERS[t].listenerConnected = !1),
+          e.dispatchEvent(n),
+          !1 === POWR_RECEIVERS[t].listenerConnected &&
+            (console.log('POWr Lost connection. Reconnecting'),
+            clearInterval(POWR_RECEIVERS[t].ping_interval),
+            (POWR_RECEIVERS[t].receiver = e.contentWindow),
+            Q(t),
+            K(t, e)));
+      }, 2e3)));
+  }
+  function Q(n) {
+    var o = new XMLHttpRequest();
+    o.open('GET', POWR_RECEIVERS[n].data_url, !0),
+      (o.withCredentials = !0),
+      (o.onreadystatechange = function() {
+        if ((o.readyState == XMLHttpRequest.DONE || 4 == o.readyState) && 200 == o.status) {
+          var e = JSON.parse(o.responseText);
+          (e.iframe_index = n), (POWR_RECEIVERS[n].data = e);
+          var t = setInterval(function() {
+            POWR_RECEIVERS[n].loaded &&
+              (POWR_RECEIVERS[n].receiver.postMessage(
+                JSON.stringify({message: 'loadView', data: e}),
+                POWR_RECEIVERS[n].url
+              ),
+              clearInterval(t));
+          }, 10);
+        }
+      }),
+      o.send();
+  }
+  function t(e) {
+    try {
+      var t = JSON.parse(e.data);
+      if ('viewLoaded' == t.message) {
+        var n = t.data.iframe_index;
+        POWR_RECEIVERS[n].loaded = !0;
+      } else if ('updateSize' == t.message) {
+        'undefined' != typeof gadgets &&
+          void 0 !== gadgets.window &&
+          void 0 !== gadgets.window.adjustHeight &&
+          gadgets.window.adjustHeight(t.data.height);
+        n = t.data.iframe_index;
+        var o = document.querySelectorAll('[powrindex="' + n + '"]')[0];
+        if (
+          o &&
+          ((o.height = t.data.height + 'px'),
+          (o.style.height = t.data.height + 'px'),
+          (o.style.display = 'inline'),
+          null != t.data.postCss)
+        )
+          for (var r in t.data.postCss) o.style[r] = t.data.postCss[r];
+      } else if ('loadMe' == t.message) {
+        n = t.data.iframe_index;
+        null != POWR_RECEIVERS[n] &&
+          null != POWR_RECEIVERS[n].data &&
+          POWR_RECEIVERS[n].receiver.postMessage(
+            JSON.stringify({message: 'loadView', data: POWR_RECEIVERS[n].data}),
+            POWR_RECEIVERS[n].url
+          );
+      }
+    } catch (e) {}
+  }
+})();

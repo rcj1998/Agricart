@@ -1,0 +1,645 @@
+if(typeof(ACR_SPURIT_Params) === 'undefined'){
+    // for local testing
+    var ACR_SPURIT_Params = {
+        id: '862fd5faf548dffb2aee44c7c649cf17',
+        folderCss:   '',    // loading from local path /webroot/files/upload/
+        folderStore: 'https://s3.amazonaws.com/shopify-apps/abandoned-cart-reminder-testing/store/'
+    };
+}
+(function(){
+    /**
+     * @config
+     * @type {int}  sec
+     */
+    var refreshCartInterval = 60;
+
+    /**
+     * @config
+     * @type {int}  ms
+     */
+    var titleBlinkingInterval = 500;
+
+    /**
+     * @type {string}
+     */
+    var shopifyCartUrl = '/cart';
+
+    /**
+     * @type {string}
+     */
+    var jsDynamicUrl = ACR_SPURIT_Params.folderStore + ACR_SPURIT_Params.id + '.js?'+Math.random();
+
+    /**
+     * @type {string}
+     */
+    var cssDynamicUrl = ACR_SPURIT_Params.folderStore + ACR_SPURIT_Params.id + '.css?'+Math.random();
+
+    /**
+     * @type {string}
+     */
+    var cssStaticUrl = ACR_SPURIT_Params.folderCss + 'common.css';
+
+    /**
+     *
+     */
+    var reminderConfig = new function () {
+        /**
+         * @type {string}
+         */
+        var TIME_UNITS_SEC = 'sec', TIME_UNITS_MIN = 'min';
+
+        /**
+         * @type {{id: int, enabled: boolean, appears_time: number, appears_time_units: string, tab_message: string, bar_message: string, active_display: boolean, position: string, active_appears_time: number, active_appears_time_units: string}}
+         */
+        var current = {enabled: false};
+
+        /**
+         * @param {int} time
+         * @param {string} units
+         * @returns {int}
+         */
+        function calcTime(time, units) {
+            time = parseInt(time);
+            return TIME_UNITS_MIN === units ? time*60 : time;
+        }
+
+        /**
+         * @param {{id: int, enabled: boolean, appears_time: number, appears_time_units: string, tab_message: string, bar_message: string, active_display: boolean, position: string, active_appears_time: number, active_appears_time_units: string}} config
+         */
+        this.set = function (config) {
+            current = config;
+        };
+
+        /**
+         * @returns {boolean}
+         */
+        this.isEnabled = function () {
+            return typeof(current.enabled)!=='undefined' ? current.enabled : false;
+        };
+
+        /**
+         * @returns {int}
+         */
+        this.id = function () {
+            return typeof(current.id)!=='undefined' ? parseInt(current.id) : 0;
+        };
+
+        /**
+         * @returns {int}
+         */
+        this.inactiveAppearsTime = function () {
+            if(typeof(current.appears_time) === 'undefined' || typeof(current.appears_time_units) === 'undefined'){
+                return 0;
+            }
+            return calcTime(current.appears_time, current.appears_time_units);
+        };
+
+        /**
+         * @returns {int}
+         */
+        this.activeAppearsTime = function () {
+            if(typeof(current.appears_time) === 'undefined' || typeof(current.appears_time_units) === 'undefined'){
+                return 0;
+            }
+            return calcTime(current.active_appears_time, current.active_appears_time_units);
+        };
+
+        /**
+         *
+         * @returns {*}
+         */
+        /*this.barLink = function () {
+            if(current.bar_message_link_enabled) {
+                return current.bar_message_link_text ? current.bar_message_link_text : 'Cart';
+            }else{
+                return '';
+            }
+        };*/
+
+        /**
+         * @returns {string}
+         */
+        this.tabMessage = function () {
+            return typeof(current.tab_message)!=='undefined' ? current.tab_message : '';
+        };
+
+        /**
+         * @returns {string}
+         */
+        this.barPosition = function () {
+            return typeof(current.position)!=='undefined' ? current.position : '';
+        };
+
+        /**
+         * @returns {string}
+         */
+        this.barMessage = function () {
+            return typeof(current.bar_message)!=='undefined' ? current.bar_message : '';
+        };
+
+        /**
+         * @returns {boolean}
+         */
+        this.activeEnabled = function () {
+            return typeof(current.active_display)!=='undefined' ? current.active_display : false;
+        };
+
+        /**
+         * @returns {string}
+         */
+        this.activeBarMessage = function () {
+            return this.barMessage();
+            //return typeof(current.active_message)!=='undefined' ? current.active_message : '';
+        };
+    };
+
+    /**
+     * @param $
+     */
+    function main($){
+        /**
+         * @param {function({item_count:int})} callback
+         */
+        function getCart(callback) {
+            if(document.location.host.indexOf('.spurit.loc') !== -1){
+                callback({item_count:1});   // for local testing
+            }else{
+                $.getJSON('/cart.js', function(cart){
+                    callback(cart);
+                });
+            }
+        }
+
+        /**
+         * @param {function()} callback
+         */
+        function loadConfig(callback) {
+            loadStatic(jsDynamicUrl, function () {
+                reminderConfig.set(window.ACR_SPURIT_Config);
+                callback();
+            });
+        }
+
+        /**
+         * @param {function()} callback
+         */
+        function loadStyles(callback) {
+            loadStatic(cssStaticUrl, function () {
+                loadStatic(cssDynamicUrl, callback);
+            });
+        }
+
+        /**
+         *
+         */
+        var titleBlinking = new function () {
+            /**
+             * @type {string}
+             */
+            var orig = document.title;
+
+            /**
+             * @type {number}
+             */
+            var interval = 0;
+
+            /**
+             * @param {string} title
+             */
+            this.start = function (title) {
+                if(interval) return;
+                title = trim(title);
+                interval = setInterval(function () {
+                    if(trim(document.title) === title){
+                        document.title = '**********';
+                    }else{
+                        document.title = title;
+                    }
+                }, titleBlinkingInterval);
+            };
+
+            /**
+             *
+             */
+            this.stop = function () {
+                if(!interval) return;
+                document.title = orig;
+                clearInterval(interval);
+                interval = 0;
+            };
+        };
+
+        /**
+         *
+         */
+        var bar = new function () {
+            /**
+             *
+             */
+            var self = this;
+
+            /**
+             * @type {boolean}
+             */
+            var shown = false;
+
+            /**
+             * @type {Object|null}
+             */
+            var $barElement = null;
+
+            /**
+             *
+             */
+            function makeHtml() {
+                if($barElement !== null) return;
+                $('body').prepend(
+                    '<div class="ACR_bar ACR_position_'+reminderConfig.barPosition()+'">' +
+                        '<a href="#" class="ACR_close">&times;</a>' +
+                        '<span class="ACR_contents"></span>' +
+                        '<div class="ACR_clear"></div>' +
+                    '</div>'
+                );
+                $barElement = $('.ACR_bar');
+                $barElement.find('.ACR_close').click(function () {
+                    self.hide();
+                    self.wasClosedOnce(true);
+                    return false;
+                });
+            }
+
+            /**
+             * @param {string} text
+             */
+            this.show = function (text) {
+                if(shown) return;
+                if(self.wasClosedOnce()) return;
+                makeHtml();
+
+                /*var linkText = reminderConfig.barLink();
+                if(linkText){
+                    text = text.replace(
+                        /:cart/g,
+                        '<a href="'+shopifyCartUrl+'" class="ACR_link">'+linkText+'</a>'
+                    );
+                }*/
+                if(text.indexOf('[') !== -1 && text.indexOf(']') !== -1 && text.indexOf('[') < text.indexOf(']')){
+                    text = text.replace(/\[/g, '<a href="'+shopifyCartUrl+'" class="ACR_link">');
+                    text = text.replace(/\]/g, '</a>');
+                }
+                $barElement.find('.ACR_contents').html(text);
+                $(document).ready(function(){
+                    $barElement.slideDown(500);
+                });
+                shown = true;
+            };
+
+            /**
+             *
+             */
+            this.hide = function () {
+                //shown = false;    // Don't show the bar if it was shown once
+                if(!shown) return;
+                $barElement.slideUp(500);
+            };
+
+            /**
+             * @returns {boolean}
+             */
+            this.wasClosedOnce = function (set) {
+                var cName = 'ACR-' + reminderConfig.id() + '-bar-closed';
+                if(set){
+                    setCookie(cName, '1');
+                    return true;
+                }
+                return !$('#admin_bar_iframe').length && !!getCookie(cName);
+            };
+        };
+
+        /**
+         *
+         */
+        var processingInactiveUser = new function () {
+
+            /**
+             * @type {Timer|null}
+             */
+            var timer = null;
+
+            /**
+             * @type {boolean}
+             */
+            var isHandlersSet = false;
+
+            /**
+             *
+             */
+            this.start = function() {
+                if(!timer){
+                    timer = new Timer(
+                        function () {
+                            bar.show(reminderConfig.barMessage());
+                            if(!bar.wasClosedOnce()){
+                                titleBlinking.start(reminderConfig.tabMessage());
+                            }
+                        },
+                        reminderConfig.inactiveAppearsTime() * 1000
+                    );
+                }
+                if(!isHandlersSet){
+                    $(document.body).bind('click mousemove keyup', function () {
+                        if(timer){
+                            timer.reset();
+                            titleBlinking.stop();
+                        }
+                    });
+                    $(window).bind('scroll focus', function () {
+                        if(timer){
+                            timer.reset();
+                            titleBlinking.stop();
+                        }
+                    });
+                    isHandlersSet = true;
+                }
+            };
+
+            /**
+             *
+             */
+            this.stop = function() {
+                if(timer){
+                    timer.stop();
+                    timer = null;
+                }
+            };
+        };
+
+        /**
+         *
+         */
+        var processingActiveUser = new function () {
+
+            /**
+             * @type {Timer|null}
+             */
+            var timer = null;
+
+            /**
+             * @returns {string}
+             */
+            function cookieName() {
+                return 'ACR-' + reminderConfig.id() + '-start';
+            }
+
+            /**
+             *
+             */
+            this.start = function () {
+                var startTime;
+                // Trying to get date from cookies
+                var startTimeFromCookie = getCookie(cookieName());
+                if(typeof(startTimeFromCookie)==='string' || startTimeFromCookie instanceof String){
+                    startTime = new Date(startTimeFromCookie);
+                }
+                if( !(startTime instanceof Date) || isNaN(startTime.getTime()) ){
+                    // Date not found in the cookies OR it is in wrong format (if startTime.getTime() returns NaN)
+                    startTime = new Date();
+                    setCookie( cookieName(), startTime.toString() );
+                }
+                if(!timer){
+                    timer = new Timer(
+                        function () {
+                            bar.show(reminderConfig.activeBarMessage());
+                        },
+                        reminderConfig.activeAppearsTime() * 1000
+                    );
+                    timer.reset(startTime);
+                }
+            };
+
+            /**
+             *
+             */
+            this.stop = function () {
+                setCookie(cookieName(), '');
+                if(timer){
+                    timer.stop();
+                    timer = null;
+                }
+            };
+        };
+
+        // START
+        loadConfig(function () {
+            if(!reminderConfig.isEnabled()) return;
+            loadStyles(function () {
+                /**
+                 * Main cycle
+                 */
+                function refreshCart () {
+                    getCart(function (cart) {
+                        if(cart.item_count){
+                            processingInactiveUser.start();
+                            if(reminderConfig.activeEnabled()){
+                                processingActiveUser.start();
+                            }
+                        }else{
+                            processingInactiveUser.stop();
+                            if(reminderConfig.activeEnabled()){
+                                processingActiveUser.stop();
+                            }
+                        }
+                        setTimeout(function(){refreshCart()}, refreshCartInterval*1000);
+                    });
+                }
+                refreshCart();
+            });
+        });
+    }
+
+    /**
+     * @param {function()} callback
+     * @param {int} delayMs
+     * @constructor
+     */
+    var Timer = function (callback, delayMs) {
+        /**
+         * @type {Timer}
+         */
+        var self = this;
+
+        /**
+         * @type {Date}
+         */
+        var started = new Date();
+
+        /**
+         * @type {int}
+         */
+        var interval = 0;
+
+        /**
+         * @param {Date} startDate
+         */
+        this.reset = function (startDate) {
+            if(startDate instanceof Date){
+                started = startDate;
+            }else{
+                started = new Date();
+            }
+        };
+
+        /**
+         *
+         */
+        this.stop = function () {
+            if(interval){
+                clearInterval(interval);
+            }
+        };
+
+        /**
+         * @returns {int}   ms
+         */
+        this.elapsed = function () {
+            return Math.abs((new Date()).getTime() - started.getTime());
+        };
+
+        if(typeof(callback) === 'function'){
+            interval = setInterval(
+                function () {
+                    if(self.elapsed() >= delayMs){
+                        callback();
+                        clearInterval(interval);
+                        interval = 0;
+                    }
+                },
+                Math.min(500, delayMs)
+            );
+        }
+    };
+
+    /**
+     * @param	{String}	name
+     * @returns {String|undefined}
+     */
+    function getCookie(name) {
+        var matches = document.cookie.match(new RegExp(
+            "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+        ));
+        return matches ? decodeURIComponent(matches[1]) : undefined;
+    }
+
+    /**
+     * @param	{String}	name
+     * @param	{String}	value
+     * @param	{Date}	    expires
+     * @param	{String}	path
+     * @param	{String}	domain
+     * @param	{Boolean}	secure
+     */
+    function setCookie(name, value, expires, path, domain, secure) {
+        // Set default expires to +24h
+        if(!(expires instanceof Date)){
+            expires = new Date();
+            expires.setDate( expires.getDate() + 1 );
+        }
+        //expires = expires || '';
+        path = path || '/';
+        document.cookie = name + "=" + encodeURIComponent(value) +
+            ((expires) ? "; expires=" + expires.toUTCString() : "") +
+            ((path) ? "; path=" + path : "") +
+            ((domain) ? "; domain=" + domain : "") +
+            ((secure) ? "; secure" : "");
+    }
+
+    /**
+     * @param {string} url
+     * @param {function()} callback
+     * @param {string} type 'js' or 'css'
+     */
+    function loadStatic(url, callback, type) {
+        if(typeof(callback) !== 'function'){
+            callback = function(){};
+        }
+        if(type !== 'js' && type !== 'css'){
+            type = url.toLowerCase().split('?')[0].split('#')[0].split('.').pop();
+        }
+        if(type !== 'js' && type !== 'css'){
+            console.error('Undefined type of static file "' + url + '"');
+            callback();
+        }
+        var tag;
+        if(type === 'js'){
+            tag = document.createElement('script');
+            tag.type = 'text/javascript';
+        }else{
+            tag = document.createElement('link');
+            tag.type = 'text/css';
+            tag.rel = 'stylesheet';
+        }
+        if (tag.readyState){// If the browser is Internet Explorer.
+            tag.onreadystatechange = function(){
+                if (tag.readyState === 'loaded' || tag.readyState === 'complete'){
+                    tag.onreadystatechange = null;
+                    callback();
+                }
+            };
+        } else { // For any other browser.
+            tag.onload = function(){
+                callback();
+            };
+        }
+        if(type === 'js'){
+            tag.src = url;
+        }else{
+            tag.href = url;
+        }
+        document.getElementsByTagName('head')[0].appendChild(tag);
+    }
+
+    function addHandler(element, event, handler, useCapture) {
+        if(event === ''){
+            return;
+        }
+        if(element.addEventListener){
+            element.addEventListener(event, handler, useCapture ? useCapture : false);
+        }else if(element.attachEvent){
+            element.attachEvent('on' + event, handler);
+        }else{
+            element['on' + event] = handler;
+        }
+    }
+
+    function onLoad(callback){
+        if(
+            document.readyState === 'complete' ||
+            ( document.readyState === 'interactive' && !/MSIE *\d+\.\w+/i.test(window.navigator.userAgent) ) ||	// в IE в этом режиме работа с DOM возможна, только если все скрипты разместить в футере
+            document.readyState === 'loaded'	// Вариант для некоторых старых браузеров
+        ){
+            callback();
+        }else{
+            addHandler(document, 'DOMContentLoaded', function(){callback()});
+        }
+    }
+
+    function trim(str, charlist){
+        if(typeof(str) != 'string') return '';
+        charlist = !charlist ? ' \\s\xA0' : charlist.replace(/([\[\]\(\)\.\?\/\*\{\}\+\$$$\^\:])/g, '\$$$1');
+        var re = new RegExp('^[' + charlist + ']+|[' + charlist + ']+$$$', 'g');
+        return str.replace(re, '');
+    }
+
+    if ((typeof jQuery === 'undefined') || (parseFloat(jQuery.fn.jquery) < 1.7)) {
+        loadStatic('//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js', function(){
+            jQuery191 = jQuery.noConflict(true);
+            onLoad(function () {
+                main(jQuery);
+            });
+        });
+    } else {
+        onLoad(function () {
+            main(jQuery);
+        });
+    }
+})();

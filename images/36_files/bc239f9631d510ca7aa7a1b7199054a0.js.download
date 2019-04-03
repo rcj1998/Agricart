@@ -1,0 +1,1 @@
+window.ACR_SPURIT_Config = {"id":"2010","enabled":false,"appears_time":"3","appears_time_units":"min","tab_message":"Cart: you have some items","bar_message":"Your cart will expire in 10 minutes","active_display":false,"active_appears_time":"5","active_appears_time_units":"min","position":"top","shop_id":"2491"}

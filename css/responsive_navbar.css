@@ -1,0 +1,406 @@
+*{
+    margin: 0;
+    padding: 0;
+
+}
+
+body{
+    font-family: sans-serif;
+    height: auto;
+    overflow: auto;
+}
+#textd{	color:black;
+		text-decoration:none;
+}
+#heading{
+	color:red;
+font-family:Showcard Gothic;
+		padding:50px 25px ;
+}
+.login {
+	align:right;
+	float:right;
+    background-color: black;
+    border: none;
+    color: white;
+    padding: 15px 80px;
+   
+    text-decoration: none;
+    display: inline-block;
+    font-size: 12px;
+    margin: 40px 2px;
+    cursor: pointer;
+}
+	 .mainlogo{
+		
+	 MARGIN-left:90px;
+	 margin-right:90px;
+	  
+}
+
+.register {
+	align:right;
+	float:right;
+    background-color: black;
+    border: none;
+    color: white;
+    padding: 15px 80px;
+   border-radius:5px;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 12px;
+    margin: 40px 15px;
+    cursor: pointer;
+}
+.log{visibility:hidden; padding-top:-10px;}
+.reg{visibility:hidden; padding-top:-10px;}
+.logreg{ padding-top:-10px;
+visibility:hidden;}
+#drop{
+	
+	margin-left:-37px; float:left; width:170px; padding:0 10px 0 40px; height:120px;
+}
+header{
+    width: 100%;
+    height: auto;
+}
+
+nav{
+	position:static;
+	top:500px;
+    background: #efefef;
+    overflow: hidden;
+   
+	margin-left:100px;
+	margin-right:100px;
+
+
+	
+	background:black;
+padding:10px  0 10px 0 }
+    
+
+
+.hidden{
+	visibility:none;
+}
+.logo-section{
+
+visibility:none;
+    float: left;
+    padding: 18px;
+   
+}.logo{
+		display:hidden;
+	}
+
+.hb-button{
+    float: right;
+    background: #222;
+    color: #ffffff;
+    border: none;
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    display: none;
+}
+
+
+nav a{
+	
+    text-decoration: none;
+    color: #282828;
+    font-size: 14px;
+    
+}
+
+nav ul{
+	
+    overflow: hidden;
+    color: #fff;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    transition: max-height 0.5s;
+    -webkit-transition: max-height 0.5s;
+    -moz-transition: max-height 0.5s;
+    -ms-transition: max-height 0.5s;
+    -o-transition: max-height 0.5s;
+}
+
+nav ul li{ 
+	font-family:'Alegreya',sans-serif;
+font-size:80%; 
+	display:inline-block;
+	
+	padding:10px;
+
+    }
+   
+.LINE{
+
+
+	border-left: 1.5px solid rgba(255,255,255,.3);
+padding-left:35px;
+padding-right:5px;
+}
+.noline{
+	visibility:none;
+}
+nav ul li  a{
+
+    position: relative;
+color:white;
+    text-decoration: none;
+    
+}
+	
+.button {
+       transition-duration: 0.4s;
+}
+
+.button:hover {
+	 border: 2px solid black;
+
+    background-color: white; 
+    color: black;
+}
+
+nav ul li  a:before {
+	content:'';
+	position: absolute;
+	top: -15px;
+	left: 0px;
+	width: 100%;
+	height: 0px;
+	padding-left:20px;
+	background: rgba(255,255,255,.3);
+	border-radius: 5px;
+	transition: all 1s ease;
+}
+nav ul li a:hover:before {
+	height: 50px;
+	
+}
+
+footer a:before {
+	content:'';
+	border-radius: 5px;
+	transition: all 2s ;
+} 
+
+
+
+
+
+
+.current {
+	background: rgba(255,255,255,.3);
+	padding:15px;
+}
+
+
+
+
+
+@media screen and (max-width: 1200px){
+    
+	.logo-section{
+      float:right;
+	  
+    }
+	.logo{
+		
+		visibility:visible;
+	}
+	nav{
+		background:black;
+		margin-left:50px;
+		margin-right:50px;
+		
+	
+	}
+    nav ul{
+margin-right:10px;
+        background: black;
+        max-height: 0;
+        max-width: 100%;
+    }
+    nav ul.show{
+        max-height: 20em;
+    }
+    nav ul li{
+		color:white;
+        box-sizing: border-box;
+        width: 100%;
+        padding: 15px;
+	
+    }
+    .hb-button{
+        display: inline;
+    }
+	.noline{
+
+
+	border-left:none;
+}
+}
+
+/*for responsive search doners */
+
+
+
+
+
+
+
+input[type=submit]:hover {
+  
+
+    background-color: white; 
+	font-size:120%;
+    color:#830303;
+	border:1px solid black;
+}
+
+
+
+
+
+/*for responsive search doners */
+* {
+    box-sizing: border-box;
+}
+
+input[type=text], select, textarea{
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    resize: vertical;
+}
+
+label {
+    padding: 12px 12px 12px 0;
+    display: inline-block;
+}
+
+input[type=submit] {
+	width:100%;
+    background-color: black;
+    color: white;
+    padding: 12px 20px;
+  margin-top:20px;
+	background-color:#53504F;
+    color: white;
+    padding: 12px 20px;
+ border: none;
+    cursor: pointer;
+
+
+}
+
+
+
+.container {
+    border-radius: 5px;
+    background-color: #f2f2f2;
+    padding: 20px;
+}
+
+.col-25 {
+ 
+  
+ 
+	margin-left:0%;
+	
+}
+.col-75 {
+ 
+    min-width: 100%;
+
+	margin-left:0;
+	
+
+}
+.submitbtn{
+	margin-left:40%	;
+	margin-right:40%;
+}
+.row{
+	margin-left:20%	;
+	margin-right:20%;
+}
+/* Clear floats after the columns */
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+ .col-25, .col-75, input[type=submit] {
+        width: 100%;
+
+    }
+/* Responsive layout - when the screen is less than 600px wide, make the two columns stack on top of each other instead of next to each other */
+
+
+
+/* Clear floats after the columns */
+]
+                                           /* Slideshow  work started from here         */
+
+/* Slideshow container */
+.slideshow-container {
+overflow:none;
+  max-width:370px;
+
+  margin: auto;
+  
+}
+
+/* Caption text */
+
+
+/* Number text (1/3 etc) */
+
+
+/* The dots/bullets/indicators */
+.dot {
+	margin-top:05px;
+  height: 15px;
+  width: 15px;
+  margin: 0 2px ;
+  background-color: #bbb;
+  border-radius: 50%;
+  display: inline-block;
+  transition: background-color 0.6s ease;
+}
+
+.active {
+  background-color: #717171;
+}
+
+/* Fading animation */
+.fade {
+  -webkit-animation-name: fade;
+  -webkit-animation-duration: 1.5s;
+  animation-name: fade;
+  animation-duration: 1.5s;
+  
+}
+
+@-webkit-keyframes fade {
+  from {opacity: .4} 
+  to {opacity: 1}
+}
+
+@keyframes fade {
+  from {opacity: .4} 
+  to {opacity: 1}
+}
+
+/* On smaller screens, decrease text size */
+
+                                             /* Slideshow  work end here         */

@@ -1,0 +1,211 @@
+var Tabify = {
+  tabsCount: 0,
+  tabContainerCount: 0,
+  init: function() {
+    Tabify.getjQuery();
+  },
+  cache: 40,
+  getjQuery: function() {
+    var url = "//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js";
+    var script = document.createElement("script")
+    script.type = "text/javascript";
+    if (script.readyState){  //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == "loaded" || script.readyState == "complete") {
+          script.onreadystatechange = null;
+          Tabify.jQuery = jQuery.noConflict(true);
+          Tabify.getSettings();
+        }
+      };
+    } else {  //Others
+      script.onload = function(){
+        Tabify.jQuery = jQuery.noConflict(true);
+        Tabify.jQuery(document).trigger("tabify:preload");
+        Tabify.getScript();
+        Tabify.getSettings();
+      };
+    }
+    script.src = url;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  },
+  getScript: function() {
+    var url = "//tabify.checkend.com/js/jquery.tabslet.min.js";
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = url;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  },
+  getSettings: function() {
+    var e = Math.ceil((new Date).getTime() / 1e3 / this.cache) * this.cache;
+    var t = document.createElement("script");
+    t.src = "//tabify.checkend.com/v2/js/settings.js?updated_at=1514955207" + e + "&shop=" + Tabify.clientUrl;
+    document.getElementsByTagName('head')[0].appendChild(t);
+  },
+  setStyles: function() {
+    var e = document.createElement("style");
+    e.innerHTML = Tabify.settings.themeCSS, document.getElementsByTagName("head")[0].appendChild(e)
+  },
+  saveSettings: function(settings) {
+    this.settings = settings;
+  },
+  createStructure: function() {
+    console.log("[Tabify] Creating Structure");
+    var c = document.getElementsByClassName(this.settings.containerSelectors),
+        l = c.length;
+    for (var i=0; i<l; i++) {
+      // Increment the Tab Count
+      Tabify.tabContainerCount += 1;
+
+      var panels = [];
+      var container = c[i];
+
+      // Create $li from tags
+      var tabs = container.getElementsByTagName(this.settings.tag),
+          tabsLength = tabs.length;
+
+      if (tabsLength > 0) {
+        // Hide element
+        container.style.display = 'none';
+
+        // Create wrapper
+        var $w = document.createElement('div');
+        $w.id  = "tabify-set-" + i;
+        $w.id = "tabify-container-" + Tabify.tabContainerCount;
+        Tabify.addClass($w, "tabify-wrapper");
+        // Insert before our container
+        container.parentNode.insertBefore($w, container);
+
+        // Create ul list
+        var $ul = document.createElement('ul');
+        Tabify.addClass($ul, "tabify-tabs");
+        Tabify.addClass($ul, "horizontal");
+        // Insert within our wrapper
+        $w.appendChild($ul);
+
+        var $tagMarkers   = Tabify.jQuery(container).find(Tabify.settings.tag);
+        Tabify.jQuery.each($tagMarkers, function(index, value) {
+          var $element      = Tabify.jQuery(value);
+          var $innerContent = $element.nextUntil(Tabify.settings.tag);
+          var content = "";
+          Tabify.jQuery.each($innerContent, function(index, innerContent) {
+            content += Tabify.jQuery(innerContent).prop('outerHTML');
+          });
+
+          // Create the Tab Header
+          var tabTitle = Tabify.jQuery(value).html();
+          $ul.innerHTML += Tabify.createListItem(tabTitle);
+
+          // Create the Tab Panel
+          var $panel = Tabify.createPanel(content);
+          Tabify.addClass($panel, "tabify-panel");
+          panels.push($panel);
+        });
+
+        // Custom Tabs
+        if (this.settings.customTabsWithExistingTabs) {
+          for (var x=0; x<this.settings.customTabs.length; x++) {
+            var customTab = this.settings.customTabs[x];
+            // Create the Tab Header
+            $ul.innerHTML += Tabify.createListItem(customTab.header);
+            // Create the Tab Panel
+            var $panel = Tabify.createPanel(customTab.panel);
+            Tabify.addClass($panel, "tabify-panel");
+            panels.push($panel);
+          }
+        }
+
+        // Append the panels
+        for (var x=0; x<panels.length; x++) {
+          $w.appendChild(panels[x]);
+        }
+      }
+
+      if ((tabsLength < 1) && (Tabify.settings.customTabsEverywhere)) {
+        // Hide element
+        container.style.display = 'none';
+
+        // Create wrapper
+        var $w = document.createElement('div');
+        $w.id  = "tabify-set-" + i;
+        $w.id = "tabify-container-" + Tabify.tabContainerCount;
+        Tabify.addClass($w, "tabify-wrapper");
+        // Insert before our container
+        container.parentNode.insertBefore($w, container);
+
+        // Create ul list
+        var $ul = document.createElement('ul');
+        Tabify.addClass($ul, "tabify-tabs");
+        Tabify.addClass($ul, "horizontal");
+        // Insert within our wrapper
+        $w.appendChild($ul);
+
+        // Wrap everything in the existing container under one single tab
+        $ul.innerHTML += Tabify.createListItem(this.settings.descriptionTitle);
+        var $descriptionPanel = Tabify.createPanel(Tabify.jQuery(container).html());
+        Tabify.addClass($descriptionPanel, "tabify-panel");
+        panels.push($descriptionPanel)
+
+        // Custom Tabs
+        if (this.settings.customTabsWithExistingTabs) {
+          for (var x=0; x<this.settings.customTabs.length; x++) {
+            var customTab = this.settings.customTabs[x];
+            // Create the Tab Header
+            $ul.innerHTML += Tabify.createListItem(customTab.header);
+            // Create the Tab Panel
+            var $panel = Tabify.createPanel(customTab.panel);
+            Tabify.addClass($panel, "tabify-panel");
+            panels.push($panel);
+          }
+        }
+
+        // Append the panels
+        for (var x=0; x<panels.length; x++) {
+          $w.appendChild(panels[x]);
+        }
+      }
+    }
+  },
+  createTabs: function() {
+    console.log("[Tabify] Creating Tabs");
+    Tabify.jQuery('#tabify-container-1').tabslet();
+  },
+  createAccordion: function() {
+    var string="";
+    string += "<article class=\"tabify-accordion\" style=\"display:none;\">";
+    var $contents = $('.tabify-wrapper .tabify-panel');
+    $('.tabify-wrapper .tabify-tabs li').each(function(index, element) {
+      var $this = $(element);
+      var label = $this.find('a').html();
+      string += "<section id='tabify-accordion-"+index+"'>";
+      string += "<h2><a href='#tabify-accordion-"+index+"'>"+label+"<\/a><\/h2>"
+      string += $($contents[index]).html();
+      string += "<\/section>";
+    });
+    string += "<\/article>";
+    var $string = Tabify.jQuery(string);
+    $string.insertAfter(Tabify.jQuery('.tabify-wrapper'));
+  },
+  isMobileDevice: function() {
+    return window && window.innerWidth && window.innerWidth < 767 ? 1 : 0
+  },
+  hasClass: function(el, className) {
+    return el.classList ? el.classList.contains(className) : new RegExp('\\b'+ className+'\\b').test(el.className);
+  },
+  addClass: function(el, className) {
+    if (el.classList) el.classList.add(className);
+    else if (!hasClass(el, className)) el.className += ' ' + className;
+  },
+  createListItem: function(content) {
+    Tabify.tabsCount += 1;
+    return "<li class='tabify-tab'><a href='#tabify-"+Tabify.tabsCount+"'>"+content+"</a></li>";
+  },
+  createPanel: function(content) {
+    var $panel = document.createElement("div");
+    $panel.id = "tabify-" + Tabify.tabsCount;
+    $panel.innerHTML = content;
+    return $panel;
+  }
+}
+Tabify.clientId = "f484c7e2d006f256a062fcab19f8ed64";
+Tabify.clientUrl = "bighaat-2.myshopify.com";
+Tabify.init();

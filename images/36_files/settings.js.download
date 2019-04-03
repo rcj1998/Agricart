@@ -1,0 +1,31 @@
+var tabifySettings = {
+  containerSelectors: "checkend-tabify-description",
+  tag: "h4",
+  customTabsEverywhere: false,
+  customTabsWithExistingTabs: true,
+  descriptionTitle: "Description",
+  customTabs: [
+    
+  ],
+  themeCSS: "/* Tabify Default Theme */\ndiv.tabify-wrapper p {\n  margin: 0 0 10px;\n}\nul.tabify-tabs {\n  padding: 5px 0;\n  padding-bottom: 5px; /* Adjustment */\n  font-size: 0;\n  margin: 0;\n  list-style-type: none;\n  line-height: 1.5em;\n  text-align: left;\n  z-index: 100;\n}\nul.tabify-tabs li {\n  line-height: initial;\n  display: inline;\n  margin: 0;\n  margin-right: 1px;\n  margin-left: 0px;\n}\nul.tabify-tabs li a {\n  font-family: Arial, Helvetica, sans-serif;\n  font-weight: 400;\n  font-size: 12px;\n  text-decoration: none;\n  position: relative;\n  z-index: 1;\n  line-height: 1.5em;\n  padding-top: 7px;\n  padding-right: 7px;\n  padding-bottom: 7px;\n  padding-left: 7px;\n  border-width: 1px;\n  border-style: solid;\n  border-color: #cccccc;\n  border-bottom-color: #b7b7b7;\n  color: #000000;\n  background: #f0f0f0;\n  border-radius: 6px 6px 0px 0px;\n  outline: none;\n}\nul.tabify-tabs li a:hover {\n  color: #000000;\n  background: #E0E0E0;\n}\nul.tabify-tabs li.active a {\n  position: relative;\n  top: 0px;\n  background: #ffffff;\n  color: #000000;\n  border-color: #b7b7b7;\n  border-bottom-color: #ffffff;\n}\nul.tabify-tabs li.active a,\nul.tabify-tabs li.active a:focus,\nul.tabify-tabs li.active a:hover {\n  opacity: 1;\n  border-bottom-color: #ffffff; /* Same as tab background color active */\n}\ndiv.tabify-wrapper div.tabify-panel {\n  z-index: 1;\n  border-top-width: 1px;\n  border-top-style: solid;\n  border-top-color: #b7b7b7;\n  border-right-width: 1px;\n  border-right-style: solid;\n  border-right-color: #b7b7b7;\n  border-bottom-width: 1px;\n  border-bottom-style: solid;\n  border-bottom-color: #b7b7b7;\n  border-left-width: 1px;\n  border-left-style: solid;\n  border-left-color: #b7b7b7;\n  padding-top: 20px;\n  padding-right: 10px;\n  padding-bottom: 10px;\n  padding-left: 10px;\n  background-color: #ffffff;\n}\n"
+}
+
+function run() {
+  Tabify.jQuery(document).trigger("tabify:loading");
+  Tabify.saveSettings(tabifySettings);
+  Tabify.setStyles();
+  Tabify.createStructure();
+  Tabify.createAccordion();
+  Tabify.jQuery(document).trigger("tabify:wireframed");
+  Tabify.createTabs();
+  Tabify.jQuery(document).trigger("tabify:loaded");
+}
+
+// in case the document is already rendered
+if (document.readyState!='loading') run();
+// modern browsers
+else if (document.addEventListener) document.addEventListener('DOMContentLoaded', run);
+// IE <= 8
+else document.attachEvent('onreadystatechange', function(){
+  if (document.readyState=='complete') run();
+});

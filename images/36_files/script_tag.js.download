@@ -1,0 +1,140 @@
+            
+    (function () {
+        var recomify = function (jQuery) {
+                    
+
+    function getProductHandle() {
+        var url = window.location.pathname;
+        return url.substr(url.lastIndexOf('/') + 1);
+    }
+
+    function resizeRecomifyFrame(id) {
+        var iframe = document.getElementById(id);
+        window.addEventListener('message', function (event) {
+            if (event.origin !== 'https://app.recomify.com') {
+                return;
+            }
+            if (isNaN(event.data)) {
+                return;
+            }
+            if (event.data == -1) {
+                iframe.parentNode.removeChild(iframe);
+                return;
+            }
+
+            if (event.data == 1000) {
+                var handle = getProductHandle();
+                if (handle.length == 0) {
+                    handle = 'other';
+                }
+                sessionStorage.setItem('handle', handle);
+                return;
+            }
+
+            var height = parseInt(event.data) + 32;
+            iframe.style.height = height + "px";
+            jQuery('#' + id).css('visibility', 'visible');
+        }, false)
+    }
+
+    var iframeUrl;
+    if (window.location.pathname == '/') {
+        iframeUrl = '/homepage-products?shop=bighaat-2.myshopify.com';
+    } else if (window.location.pathname == '/cart') {
+        iframeUrl = '/cartpage-products?shop=bighaat-2.myshopify.com';
+    } else {
+        iframeUrl = '/related-products?shop=bighaat-2.myshopify.com&amp;handle=_handle'.replace('_handle', getProductHandle());
+    }
+
+    jQuery('#recomify_frame').html('<iframe id="recomify" style="visibility:hidden;" frameBorder="0" scrolling="no" width="100%" src="https://app.recomify.com' + iframeUrl + '"></iframe>');
+    document.getElementById('recomify').addEventListener('load', function () {
+        resizeRecomifyFrame('recomify');
+    });
+
+    
+                    
+
+    function jQueryPost(url, postData) {
+        jQuery.ajax({
+            async: false,
+            type: 'POST',
+            url: url,
+            data: postData,
+            dataType: 'json'
+        });
+    }
+
+    function updateCart(postData) {
+        jQueryPost('//' + window.location.hostname + '/cart/update.js', postData);
+    }
+
+    function sendTracking() {
+        var url = window.location.pathname;
+        var handle = url.substr(url.lastIndexOf('/') + 1);
+        var cartToken = document.cookie.replace(/(?:(?:^|.*;\s*)cart\s*\=\s*((?:[^;](?!;))*[^;]?).*)|.*/, "$1");
+
+                var params = {
+            'recomify': true,
+            'tracking_code': 'IOrnyptKWI',
+            'tracking_csrf': '09902619fa6d5815806149dbb49460c8',
+            'token': cartToken,
+            'sub_domain': Shopify.shop,
+            'source_handle': handle,
+            'target_handle': sessionStorage.getItem('handle')
+        };
+
+        jQueryPost('https://app.recomify.com/product-tracking', params);
+        sessionStorage.removeItem('handle');
+    }
+
+    if (sessionStorage.getItem('handle')) {
+        jQuery.when(updateCart('attributes[tracking]=true')).then(updateCart('attributes[tracking]'));
+        sendTracking();
+    }
+
+
+
+
+
+
+    
+            
+        };
+                
+
+    function loadScript(url, callback)
+    {
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        if (script.readyState) {
+            script.onreadystatechange = function () {
+                if (script.readyState == "loaded" || script.readyState == "complete") {
+                    script.onreadystatechange = null;
+                    callback();
+                }
+            };
+        } else {
+            script.onload = function () {
+                callback();
+            };
+        }
+        script.src = url;
+        document.getElementsByTagName("head")[0].appendChild(script);
+    }
+
+    if (document.getElementById('recomify_frame') !== null) {
+
+        if ((typeof jQuery === 'undefined')) {
+            loadScript('//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js', function () {
+                var jQuery311 = jQuery.noConflict(true);
+                recomify(jQuery311);
+            });
+        } else {
+            recomify(jQuery);
+        }
+    }
+
+    
+    })();
+
+    
